@@ -3,7 +3,7 @@ import { PageEvent } from "@angular/material";
 import { Subscription } from "rxjs";
 
 import { Post } from "../post.model";
-import { PostsService } from "../posts.service";;
+import { PostsService } from "../posts.service";
 
 @Component({
   selector: "app-post-list",
@@ -28,11 +28,13 @@ export class PostListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.isLoading = true;
-    this.postsService.getPosts();
-    this.postsSub = this.postsService.getPostUpdateListener()
-      .subscribe((posts: Post[]) => {
+    this.postsService.getPosts(this.postsPerPage, this.currentPage);
+    this.postsSub = this.postsService
+      .getPostUpdateListener()
+      .subscribe((postData: {posts: Post[], postCount: number}) => {
         this.isLoading = false;
-        this.posts = posts;
+        this.totalPosts = postData.postCount;
+        this.posts = postData.posts;
       });
   }
 
@@ -44,7 +46,10 @@ export class PostListComponent implements OnInit, OnDestroy {
   }
 
   onDelete(postId: string) {
-    this.postsService.deletePost(postId);
+    this.isLoading = true;
+    this.postsService.deletePost(postId).subscribe(() => {
+      this.postsService.getPosts(this.postsPerPage, this.currentPage);
+    });
   }
 
   ngOnDestroy() {
